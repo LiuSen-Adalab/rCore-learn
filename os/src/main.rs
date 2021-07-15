@@ -4,11 +4,16 @@
 #![feature(global_asm)]
 #![feature(panic_info_message)]
 
+#[macro_use]
 mod console;
 mod lang_items;
 mod sbi;
+mod syscall;
+mod trap;
+mod batch;
 
 global_asm!(include_str!("entry.asm"));
+global_asm!(include_str!("link_app.S"));
 
 /** .bss clear */
 fn clear_bss() {
@@ -29,30 +34,11 @@ _start program entry
 // }
 
 #[no_mangle]
-pub fn rust_main() -> ! {
-    extern "C" {
-        fn stext();
-        fn etext();
-        fn srodata();
-        fn erodata();
-        fn sdata();
-        fn edata();
-        fn sbss();
-        fn ebss();
-        fn boot_stack();
-        fn boot_stack_top();
-    }
+pub fn rust_main() {
     clear_bss();
-
-    println!("\x1b[31mhello world\x1b[0m");
-    println!(".text [{:#x}, {:#x}]", stext as usize, etext as usize);
-    println!(".rodata [{:#x}, {:#x}]", srodata as usize, erodata as usize);
-    println!(".data [{:#x}, {:#x}]", sdata as usize, edata as usize);
-    println!(
-        ".boot_stack [{:#x}, {:#x}]",
-        boot_stack as usize, boot_stack_top as usize
-    );
-    println!(".bss [{:#x}, {:#x}]", sbss as usize, ebss as usize);
-
-    panic!("shutdown the machine!")
+    println!("[kernel] Hello, world!");
+    trap::init();
+    batch::init();
+    batch::run_next_app();
 }
+
