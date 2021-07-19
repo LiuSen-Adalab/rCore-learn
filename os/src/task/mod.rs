@@ -78,8 +78,6 @@ impl TaskManager {
             .map(|id| id % self.num_app)
             .find(|id| inner.tasks[*id].task_status == TaskStatus::Ready)
     }
-
-
     
     fn run_next_task(&self) {
         if let Some(next) = self.find_next_task() {

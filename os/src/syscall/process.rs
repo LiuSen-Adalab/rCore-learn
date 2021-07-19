@@ -1,4 +1,5 @@
 use crate::task;
+use crate::timer;
 
 
 pub fn sys_exit(exit_code: i32) -> ! {
@@ -11,4 +12,8 @@ pub fn sys_exit(exit_code: i32) -> ! {
 pub fn sys_yield() -> isize{
     task::suspend_current_and_run_next();
     0
+}
+
+pub fn sys_get_time() -> isize{
+    timer::get_time_ms() as isize
 }

@@ -2,24 +2,28 @@ mod context;
 
 pub use context::TrapContext;
 
+use crate::{syscall::syscall, timer};
 use riscv::register::{
     mtvec::TrapMode,
-    stvec,
-    scause::{
-        self,
-        Trap,
-        Exception,
-    },
-    stval,
+    scause::{self, Exception, Trap, Interrupt},
+    stval, stvec,sie
 };
-use crate::syscall::syscall;
+use crate::task;
 
 global_asm!(include_str!("trap.S"));
 
 pub fn init() {
-    extern "C" { fn __alltraps(); }
+    extern "C" {
+        fn __alltraps();
+    }
     unsafe {
         stvec::write(__alltraps as usize, TrapMode::Direct);
+    }
+}
+
+pub fn enable_timer_interrupt(){
+    unsafe {
+        sie::set_stimer();
     }
 }
 
@@ -32,8 +36,7 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
             cx.sepc += 4;
             cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
         }
-        Trap::Exception(Exception::StoreFault) |
-        Trap::Exception(Exception::StorePageFault) => {
+        Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, core dumped.");
             panic!("[kernel] Cannot continue!")
         }
@@ -41,8 +44,17 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
             println!("[kernel] IllegalInstruction in application, core dumped.");
             panic!("[kernel] Cannot continue!")
         }
+        Trap::Interrupt(Interrupt::SupervisorTimer) => {
+            println!("interrupted!");
+            timer::set_next_trigger();
+            task::suspend_current_and_run_next();
+        }
         _ => {
-            panic!("Unsupported trap {:?}, stval = {:#x}!", scause.cause(), stval);
+            panic!(
+                "Unsupported trap {:?}, stval = {:#x}!",
+                scause.cause(),
+                stval
+            );
         }
     }
     cx
