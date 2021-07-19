@@ -1,5 +1,7 @@
 mod context;
 
+pub use context::TrapContext;
+
 use riscv::register::{
     mtvec::TrapMode,
     stvec,
@@ -11,7 +13,6 @@ use riscv::register::{
     stval,
 };
 use crate::syscall::syscall;
-use crate::batch::run_next_app;
 
 global_asm!(include_str!("trap.S"));
 
@@ -34,11 +35,11 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
         Trap::Exception(Exception::StoreFault) |
         Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, core dumped.");
-            run_next_app();
+            panic!("[kernel] Cannot continue!")
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             println!("[kernel] IllegalInstruction in application, core dumped.");
-            run_next_app();
+            panic!("[kernel] Cannot continue!")
         }
         _ => {
             panic!("Unsupported trap {:?}, stval = {:#x}!", scause.cause(), stval);
@@ -46,5 +47,3 @@ pub fn trap_handler(cx: &mut TrapContext) -> &mut TrapContext {
     }
     cx
 }
-
-pub use context::TrapContext;

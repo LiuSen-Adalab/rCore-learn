@@ -5,11 +5,11 @@
 
 #[macro_use]
 pub mod console;
-mod lang_items;
 mod syscall;
+mod lang_items;
 
 #[no_mangle]
-#[link_section = ".text.entry"] // 使用 Rust 的宏将 _start 这段代码编译后的汇编代码中放在一个名为 .text.entry 的代码段中
+#[link_section = ".text.entry"]
 pub extern "C" fn _start() -> ! {
     clear_bss();
     exit(main());
@@ -27,17 +27,13 @@ fn clear_bss() {
         fn start_bss();
         fn end_bss();
     }
-    (start_bss as usize..end_bss as usize).for_each(|addr| unsafe {
-        (addr as *mut u8).write_volatile(0);
+    (start_bss as usize..end_bss as usize).for_each(|addr| {
+        unsafe { (addr as *mut u8).write_volatile(0); }
     });
 }
 
 use syscall::*;
 
-pub fn write(fd: usize, buf: &[u8]) -> isize {
-    sys_write(fd, buf)
-}
-
-pub fn exit(exit_code: i32) -> isize {
-    sys_exit(exit_code)
-}
+pub fn write(fd: usize, buf: &[u8]) -> isize { sys_write(fd, buf) }
+pub fn exit(exit_code: i32) -> isize { sys_exit(exit_code) }
+pub fn yield_() -> isize { sys_yield() }

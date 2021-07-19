@@ -3,6 +3,7 @@
 #![feature(llvm_asm)]
 #![feature(global_asm)]
 #![feature(panic_info_message)]
+#![feature(const_in_array_repeat_expressions)]
 
 #[macro_use]
 mod console;
@@ -10,12 +11,13 @@ mod lang_items;
 mod sbi;
 mod syscall;
 mod trap;
-mod batch;
+mod loader;
+mod config;
+mod task;
 
 global_asm!(include_str!("entry.asm"));
 global_asm!(include_str!("link_app.S"));
 
-/** .bss clear */
 fn clear_bss() {
     extern "C" {
         fn sbss();
@@ -27,18 +29,13 @@ fn clear_bss() {
 /*******************************************************************
 _start program entry
 ******************************************************************/
-// #[no_mangle]
-// extern "C" fn _start() {
-//     println!("hello");
-//     shutdown();
-// }
-
 #[no_mangle]
 pub fn rust_main() {
     clear_bss();
     println!("[kernel] Hello, world!");
     trap::init();
-    batch::init();
-    batch::run_next_app();
+    loader::load_app();
+    task::run_first_task();
+    panic!("Unreachable in rust_main!");
 }
 
