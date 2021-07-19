@@ -74,17 +74,21 @@ impl TaskManager {
         let inner = self.inner.borrow();
         let current = inner.current_task;
 
-        (current + 1..current + self.num_app)
+        (current + 1..current + self.num_app + 1)
             .map(|id| id % self.num_app)
             .find(|id| inner.tasks[*id].task_status == TaskStatus::Ready)
     }
 
+
+    
     fn run_next_task(&self) {
         if let Some(next) = self.find_next_task() {
             let mut inner = self.inner.borrow_mut();
             let current = inner.current_task;
 
             inner.tasks[next].task_status = TaskStatus::Running;
+            inner.current_task = next;
+
             let current_task_cx_ptr2 = inner.tasks[current].get_task_cx_ptr2();
             let next_task_cx_ptr2 = inner.tasks[next].get_task_cx_ptr2();
 
