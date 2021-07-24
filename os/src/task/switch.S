@@ -1,5 +1,3 @@
-# os/src/task/switch.S
-
 .altmacro
 .macro SAVE_SN n
     sd s\n, (\n+1)*8(sp)
@@ -36,3 +34,4 @@ __switch:
     # pop TaskContext
     addi sp, sp, 13*8
     ret
+
