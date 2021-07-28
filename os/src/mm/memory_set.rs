@@ -222,6 +222,41 @@ impl MemorySet {
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PageTableEntry> {
         self.page_table.translate(vpn)
     }
+
+    pub fn from_existed_user(user_space: &MemorySet) -> MemorySet {
+        let mut new_space = MemorySet::new_bare();
+        new_space.map_trampoline();
+
+        for area in user_space.areas.iter() {
+            let new_area = MapArea::from_another(area);
+            new_space.push(new_area, None);
+
+            for vpn in area.vpn_range {
+                let src = user_space.translate(vpn).unwrap().ppn();
+                let dst = new_space.translate(vpn).unwrap().ppn();
+
+                dst.get_bytes_array().copy_from_slice(src.get_bytes_array());
+            }
+        }
+
+        new_space
+    }
+
+    pub fn recycle_data_pages(&mut self) {
+        self.areas.clear();
+    }
+
+    pub fn remove_area_with_start_vpn(&mut self, start: VirtPageNum) {
+        if let Some((idx, area)) = self
+            .areas
+            .iter_mut()
+            .enumerate()
+            .find(|(_, area)| area.vpn_range.get_start() == start)
+        {
+            area.unmap(&mut self.page_table);
+            self.areas.remove(idx);
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -280,6 +315,7 @@ impl MapArea {
 
     pub fn map(&mut self, page_table: &mut PageTable) {
         for vpn in self.vpn_range {
+            println!("vpn: {}", vpn.0);
             self.map_one(page_table, vpn);
         }
     }
@@ -310,6 +346,15 @@ impl MapArea {
                 break;
             }
             current_vpn.step();
+        }
+    }
+
+    pub fn from_another(another: &Self) -> Self {
+        Self {
+            vpn_range: another.vpn_range,
+            data_frames: BTreeMap::new(),
+            map_type: another.map_type,
+            map_perm: another.map_perm,
         }
     }
 }

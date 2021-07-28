@@ -1,3 +1,4 @@
+use super::PhysAddr;
 use super::VirtAddr;
 use super::address::StepByOne;
 use super::frame_allocator;
@@ -5,6 +6,7 @@ use super::FrameTracker;
 use super::{PhysPageNum, VirtPageNum};
 use alloc::vec;
 use alloc::vec::Vec;
+use alloc::string::String;
 
 #[derive(Debug)]
 pub struct PageTable {
@@ -85,6 +87,15 @@ impl PageTable {
 
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PageTableEntry> {
         self.find_pte(vpn).map(|pte| pte.clone())
+    }
+
+    pub fn translate_va(&self, va: VirtAddr) -> Option<PhysAddr> {
+        self.find_pte(va.clone().floor()).map(|entry|{
+            let pa:PhysAddr = entry.ppn().into();
+            let offset = va.page_offset();
+            let pa_usize: usize = pa.into();
+            (pa_usize + offset).into()
+        })
     }
 
     pub fn token(&self) -> usize {
@@ -173,4 +184,31 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         start = end_va.into();
     }
     result
+}
+
+
+pub fn translated_str(token: usize, ptr: *const u8) -> String{
+    let page_table = PageTable::from_token(token);
+    let mut va = ptr as usize;
+    let mut result = String::new();
+    loop {
+        let ch: u8 = *(page_table.translate_va(VirtAddr::from(va)).unwrap().get_mut());
+        if ch == 0{
+            break;
+        }else{
+            result.push(ch as char);
+            va += 1;
+        }
+    }
+
+    result
+}
+
+
+pub fn translated_refmut<T>(token: usize, ptr: *mut T) -> &'static mut T {
+    //println!("into translated_refmut!");
+    let page_table = PageTable::from_token(token);
+    let va = ptr as usize;
+    //println!("translated_refmut: before translate_va");
+    page_table.translate_va(VirtAddr::from(va)).unwrap().get_mut()
 }

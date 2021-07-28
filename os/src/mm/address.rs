@@ -15,9 +15,7 @@ pub struct PhysAddr(pub usize);
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VirtAddr(pub usize);
-////////////////////////////////////////////////////////////////
-// impl
-///////////////////////////////////////////////////////////////
+
 impl VirtPageNum {
     pub fn indexes(&self) -> [usize; 3] {
         let mut vpn = self.0;
@@ -37,10 +35,6 @@ impl PhysPageNum {
         unsafe { core::slice::from_raw_parts_mut(pa.0 as *mut PageTableEntry, 512) }
     }
 
-    // pub fn get_bytes_array(&self) -> &'static mut [u8] {
-    //     let pa: PhysAddr = self.clone().into();
-    //     unsafe { core::slice::from_raw_parts_mut(pa.0 as *mut u8, 4096) }
-    // }
     pub fn get_bytes_array(&self) -> &'static mut [u8] {
         let pa: PhysAddr = self.clone().into();
         unsafe {
@@ -172,6 +166,13 @@ impl PhysAddr {
     pub fn aligned(&self) -> bool {
         self.page_offset() == 0
     }
+
+    pub fn get_mut<T>(&self) -> &'static mut T{
+        unsafe {
+            (self.0 as *mut T).as_mut().unwrap()
+        }
+    }
+
 }
 
 impl From<PhysAddr> for PhysPageNum {
