@@ -1,12 +1,12 @@
-use super::PhysAddr;
-use super::VirtAddr;
 use super::address::StepByOne;
 use super::frame_allocator;
 use super::FrameTracker;
+use super::PhysAddr;
+use super::VirtAddr;
 use super::{PhysPageNum, VirtPageNum};
+use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
-use alloc::string::String;
 
 #[derive(Debug)]
 pub struct PageTable {
@@ -17,7 +17,6 @@ pub struct PageTable {
 impl PageTable {
     pub fn new() -> Self {
         let frame = frame_allocator::frame_alloc().unwrap();
-        println!("frame:{}", frame.ppn.0);
         PageTable {
             root_ppn: frame.ppn,
             frames: vec![frame],
@@ -90,8 +89,8 @@ impl PageTable {
     }
 
     pub fn translate_va(&self, va: VirtAddr) -> Option<PhysAddr> {
-        self.find_pte(va.clone().floor()).map(|entry|{
-            let pa:PhysAddr = entry.ppn().into();
+        self.find_pte(va.clone().floor()).map(|entry| {
+            let pa: PhysAddr = entry.ppn().into();
             let offset = va.page_offset();
             let pa_usize: usize = pa.into();
             (pa_usize + offset).into()
@@ -171,13 +170,13 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         let ppn = page_table.translate(vpn).unwrap().ppn();
 
         vpn.step();
-        let mut  end_va = VirtAddr::from(vpn);
-        
+        let mut end_va = VirtAddr::from(vpn);
+
         end_va = end_va.min(VirtAddr::from(end));
 
-        if end_va.page_offset() == 0{
+        if end_va.page_offset() == 0 {
             result.push(&mut ppn.get_bytes_array()[..]);
-        }else{
+        } else {
             result.push(&mut ppn.get_bytes_array()[start_va.page_offset()..end_va.page_offset()]);
         }
 
@@ -186,16 +185,18 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
     result
 }
 
-
-pub fn translated_str(token: usize, ptr: *const u8) -> String{
+pub fn translated_str(token: usize, ptr: *const u8) -> String {
     let page_table = PageTable::from_token(token);
     let mut va = ptr as usize;
     let mut result = String::new();
     loop {
-        let ch: u8 = *(page_table.translate_va(VirtAddr::from(va)).unwrap().get_mut());
-        if ch == 0{
+        let ch: u8 = *(page_table
+            .translate_va(VirtAddr::from(va))
+            .unwrap()
+            .get_mut());
+        if ch == 0 {
             break;
-        }else{
+        } else {
             result.push(ch as char);
             va += 1;
         }
@@ -204,11 +205,74 @@ pub fn translated_str(token: usize, ptr: *const u8) -> String{
     result
 }
 
-
 pub fn translated_refmut<T>(token: usize, ptr: *mut T) -> &'static mut T {
     //println!("into translated_refmut!");
     let page_table = PageTable::from_token(token);
     let va = ptr as usize;
     //println!("translated_refmut: before translate_va");
-    page_table.translate_va(VirtAddr::from(va)).unwrap().get_mut()
+    page_table
+        .translate_va(VirtAddr::from(va))
+        .unwrap()
+        .get_mut()
+}
+
+pub struct UserBuffer {
+    pub buffers: Vec<&'static mut [u8]>,
+}
+
+impl UserBuffer {
+    pub fn new(buffers: Vec<&'static mut [u8]>) -> Self{
+        UserBuffer{
+            buffers
+        }
+    }
+
+    pub fn len(&self) -> usize{
+        let mut total  = 0;
+        for buffer in &self.buffers{
+            total += buffer.len();
+        }
+        total
+    }
+}
+
+impl IntoIterator for UserBuffer {
+    type Item = *mut u8;
+
+    type IntoIter = UserBufferIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        UserBufferIterator{
+            buffers: self.buffers,
+            current_buffer: 0,
+            current_idx: 0,
+        }
+    }
+}
+
+
+pub struct UserBufferIterator{
+    buffers: Vec<&'static mut [u8]>,
+    current_buffer: usize,
+    current_idx: usize,
+}
+
+impl Iterator for UserBufferIterator {
+    type Item = *mut u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_buffer >= self.buffers.len(){
+            None
+        }else{
+            let r = &mut self.buffers[self.current_buffer][self.current_idx] as *mut _;
+            if self.current_idx + 1 >= self.buffers[self.current_buffer].len(){
+                self.current_idx = 0;
+                self.current_buffer += 1;
+            }
+            else {
+                self.current_idx += 1;
+            }
+            Some(r)
+        }
+    }
 }

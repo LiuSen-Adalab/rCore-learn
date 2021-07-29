@@ -27,13 +27,13 @@ pub fn sys_getpid() -> isize {
 pub fn sys_fork() -> isize {
     let current_task = task::current_task().unwrap();
     let new_task = current_task.fork();
+    let new_pid = new_task.pid.0;
 
     let new_trap_cx = new_task.acquire_inner_lock().get_trap_cx();
     new_trap_cx.x[10] = 0;
 
-    task::add_task(new_task.clone());
-
-    new_task.pid.0 as isize
+    task::add_task(new_task);
+    new_pid as isize
 }
 
 pub fn sys_exec(path: *const u8) -> isize {

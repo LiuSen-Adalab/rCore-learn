@@ -8,7 +8,14 @@ pub use address::{PhysAddr, PhysPageNum, StepByOne, VPNRange, VirtAddr, VirtPage
 pub use frame_allocator::{frame_alloc, FrameTracker};
 pub use memory_set::{MapArea, MapPermission, MemorySet, KERNEL_SPACE};
 pub use page_table::{
-    translated_byte_buffer, translated_refmut, translated_str, PTEFlags, PageTable, PageTableEntry,
+    translated_byte_buffer,
+    translated_refmut,
+    translated_str,
+    PTEFlags,
+    PageTable,
+    PageTableEntry,
+    UserBuffer, 
+    UserBufferIterator,
 };
 
 pub fn init() {
