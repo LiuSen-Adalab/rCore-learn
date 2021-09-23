@@ -3,17 +3,19 @@ use core::fmt::{self, Debug, Formatter};
 
 use super::PageTableEntry;
 
-/// Definitions
-#[derive(Copy, Clone, Ord, PartialEq, PartialOrd, Eq)]
+#[repr(C)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PhysPageNum(pub usize);
 
 #[derive(Copy, Clone, Ord, PartialEq, PartialOrd, Eq)]
 pub struct VirtPageNum(pub usize);
 
+#[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PhysAddr(pub usize);
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(C)]
 pub struct VirtAddr(pub usize);
 
 impl VirtPageNum {
@@ -27,6 +29,8 @@ impl VirtPageNum {
         indexes
     }
 }
+
+
 
 /// Get ppn data
 impl PhysPageNum {
@@ -173,6 +177,11 @@ impl PhysAddr {
         }
     }
 
+    pub fn get_ref<T>(&self) -> &'static T {
+        unsafe {
+            (self.0 as *const T).as_ref().unwrap()
+        }
+    }
 }
 
 impl From<PhysAddr> for PhysPageNum {
@@ -198,6 +207,12 @@ impl StepByOne for VirtPageNum {
         self.0 += 1;
     }
 }
+impl StepByOne for PhysPageNum {
+    fn step(&mut self) {
+        self.0 += 1;
+    }
+}
+
 
 //////////////////////////////////////////////////////////////////////
 #[derive(Clone, Copy, Debug)]

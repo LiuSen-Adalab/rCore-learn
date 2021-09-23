@@ -1,3 +1,4 @@
+use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::sync::Weak;
 use alloc::vec;
@@ -6,6 +7,7 @@ use spin::{Mutex, MutexGuard};
 
 use crate::fs::{File, Stdin, Stdout};
 use crate::mm::KERNEL_SPACE;
+use crate::mm::translated_refmut;
 use crate::task;
 
 use crate::trap::{trap_handler, TrapContext};
@@ -157,26 +159,56 @@ impl TaskControlBlock {
         new_task_control_block
     }
 
-    pub fn exec(&self, elf_data: &[u8]) {
-        let (memory_set, user_sp, entry_point) = MemorySet::from_elf(elf_data);
-
-        let mut inner = self.acquire_inner_lock();
-
-        inner.trap_cx_ppn = memory_set
+    pub fn exec(&self, elf_data: &[u8], args: Vec<String>) {
+        // memory_set with elf program headers/trampoline/trap context/user stack
+        let (memory_set, mut user_sp, entry_point) = MemorySet::from_elf(elf_data);
+        let trap_cx_ppn = memory_set
             .translate(VirtAddr::from(TRAP_CONTEXT).into())
             .unwrap()
             .ppn();
+        // push arguments on user stack
+        user_sp -= (args.len() + 1) * core::mem::size_of::<usize>();
+        let argv_base = user_sp;
+        let mut argv: Vec<_> = (0..=args.len())
+            .map(|arg| {
+                translated_refmut(
+                    memory_set.token(),
+                    (argv_base + arg * core::mem::size_of::<usize>()) as *mut usize
+                )
+            })
+            .collect();
+        *argv[args.len()] = 0;
+        for i in 0..args.len() {
+            user_sp -= args[i].len() + 1;
+            *argv[i] = user_sp;
+            let mut p = user_sp;
+            for c in args[i].as_bytes() {
+                *translated_refmut(memory_set.token(), p as *mut u8) = *c;
+                p += 1;
+            }
+            *translated_refmut(memory_set.token(), p as *mut u8) = 0;
+        }
+        // make the user_sp aligned to 8B for k210 platform
+        user_sp -= user_sp % core::mem::size_of::<usize>();
 
+        // **** hold current PCB lock
+        let mut inner = self.acquire_inner_lock();
+        // substitute memory_set
         inner.memory_set = memory_set;
-
-        let trap_cx = inner.get_trap_cx();
-        *trap_cx = TrapContext::app_init_context(
+        // update trap_cx ppn
+        inner.trap_cx_ppn = trap_cx_ppn;
+        // initialize trap_cx
+        let mut trap_cx = TrapContext::app_init_context(
             entry_point,
             user_sp,
             KERNEL_SPACE.lock().token(),
             self.kernel_stack.get_top(),
             trap_handler as usize,
-        )
+        );
+        trap_cx.x[10] = args.len();
+        trap_cx.x[11] = argv_base;
+        *inner.get_trap_cx() = trap_cx;
+        // **** release current PCB lock
     }
 
     pub fn get_pid(&self) -> usize {

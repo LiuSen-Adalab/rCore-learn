@@ -10,6 +10,7 @@ use alloc::{collections::BTreeMap, sync::Arc};
 use lazy_static::*;
 use riscv::register;
 use spin::Mutex;
+use crate::config::MMIO;
 
 extern "C" {
     fn stext();
@@ -135,6 +136,17 @@ impl MemorySet {
             ),
             None,
         );
+
+        println!("mapping memory-mapped registers");
+        for pair in MMIO {
+            memory_set.push(MapArea::new(
+                (*pair).0.into(),
+                ((*pair).0 + (*pair).1).into(),
+                MapType::Identical,
+                MapPermission::R | MapPermission::W,
+            ), None);
+        }
+        
         memory_set
     }
 
@@ -371,4 +383,8 @@ bitflags! {
         const X = 1 << 3;
         const U = 1 << 4;
     }
+}
+
+pub fn kernel_token() -> usize {
+    KERNEL_SPACE.lock().token()
 }
