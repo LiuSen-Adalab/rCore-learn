@@ -9,6 +9,10 @@ const SYSCALL_GETPID: usize = 172;
 const SYSCALL_FORK: usize = 220;
 const SYSCALL_EXEC: usize = 221;
 const SYSCALL_WAITPID: usize = 260;
+const SYSCALL_OPEN: usize = 56;
+const SYSCALL_DUP: usize = 24;
+
+
 
 fn syscall(id: usize, args: [usize; 3]) -> isize {
     let mut ret: isize;
@@ -23,8 +27,21 @@ fn syscall(id: usize, args: [usize; 3]) -> isize {
     ret
 }
 
+/// 功能：将进程中一个已经打开的文件复制一份并分配到一个新的文件描述符中。
+/// 参数：fd 表示进程中一个已经打开的文件的文件描述符。
+/// 返回值：如果出现了错误则返回 -1，否则能够访问已打开文件的新文件描述符。
+/// 可能的错误原因是：传入的 fd 并不对应一个合法的已打开文件。
+/// syscall ID：24
+pub fn sys_dup(fd: usize) -> isize {
+    syscall(SYSCALL_DUP, [fd, 0, 0])
+}
+
 pub fn sys_close(fd: usize) -> isize {
     syscall(SYSCALL_CLOSE, [fd, 0, 0])
+}
+
+pub fn sys_open(path: &str, flags: u32) -> isize {
+    syscall(SYSCALL_OPEN, [path.as_ptr() as usize, flags as usize, 0])
 }
 
 pub fn sys_pipe(pipe: &mut [usize]) -> isize {
@@ -60,8 +77,8 @@ pub fn sys_fork() -> isize {
     syscall(SYSCALL_FORK, [0, 0, 0])
 }
 
-pub fn sys_exec(path: &str) -> isize {
-    syscall(SYSCALL_EXEC, [path.as_ptr() as usize, 0, 0])
+pub fn sys_exec(path: &str, args: &[*const u8]) -> isize {
+    syscall(SYSCALL_EXEC, [path.as_ptr() as usize, args.as_ptr() as usize, 0])
 }
 
 pub fn sys_waitpid(pid: isize, exit_code: *mut i32) -> isize {

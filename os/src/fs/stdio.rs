@@ -5,6 +5,8 @@ pub struct Stdin;
 pub struct Stdout;
 
 impl File for Stdin {
+    fn readable(&self) -> bool { false}
+    fn writable(&self) -> bool { true }
     fn read(&self, mut buf: UserBuffer) -> usize {
         assert_eq!(buf.len(), 1);
         let mut c: usize;
@@ -30,6 +32,8 @@ impl File for Stdin {
 }
 
 impl File for Stdout {
+
+    
     fn read(&self, _buf: UserBuffer) -> usize {
         panic!("Cannot read from stdout!");
     }
@@ -39,5 +43,13 @@ impl File for Stdout {
             print!("{}", core::str::from_utf8(*buffer).unwrap());
         }
         buf.len()
+    }
+
+    fn readable(&self) -> bool {
+        true
+    }
+
+    fn writable(&self) -> bool {
+        false
     }
 }

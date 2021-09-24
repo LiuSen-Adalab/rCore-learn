@@ -1,0 +1,12 @@
+/home/sen/rust/easy-fs-fuse/target/debug/deps/ansi_term-1bcbc63fb620672b.rmeta: /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/lib.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/ansi.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/style.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/difference.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/display.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/write.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/windows.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/debug.rs
+
+/home/sen/rust/easy-fs-fuse/target/debug/deps/ansi_term-1bcbc63fb620672b.d: /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/lib.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/ansi.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/style.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/difference.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/display.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/write.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/windows.rs /home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/debug.rs
+
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/lib.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/ansi.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/style.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/difference.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/display.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/write.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/windows.rs:
+/home/sen/.cargo/registry/src/mirrors.ustc.edu.cn-61ef6e0cd06fb9b8/ansi_term-0.11.0/src/debug.rs:
